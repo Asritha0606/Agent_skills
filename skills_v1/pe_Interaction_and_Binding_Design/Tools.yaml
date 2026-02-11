@@ -1,0 +1,167 @@
+# =========================
+# Tools
+# =========================
+tools:
+
+Evobind:
+  category: peptide_binder_design
+
+  description: >
+    Designs peptide binders against a target protein using
+    sequence-level input and structure-guided optimization.
+    Generates peptide–protein complex models, interaction
+    metrics, and optimized peptide sequences.
+
+  when_to_use:
+    - peptide binders against a specific protein are required
+    - interface-focused binding optimization is requested
+    - peptide–protein interaction design is the primary goal
+    - affinity maturation or binder discovery workflows
+    - structure-guided peptide evaluation is desired
+
+  requires:
+    - target_protein_sequence
+
+  optional_inputs:
+    - interface_residue_positions
+    - peptide_length_constraints
+    - cyclic_peptide_constraints
+    - evolutionary_alignment_file
+
+  produces:
+    - peptide_protein_complex_structures
+    - peptide_binder_sequences
+    - interaction_metrics_summary
+
+  allowed_when:
+    - peptide_binding_requested
+    - interface_specific_design_requested
+    - binder_discovery_workflow
+    - protein_target_sequence_available
+
+  forbidden_when:
+    - general_peptide_generation_requested
+    - property_prediction_only_requested
+    - protein_structure_prediction_only_requested
+    - small_molecule_design_requested
+
+  constraints:
+    - requires a target protein sequence as primary input
+    - produces predictive, not experimentally validated, complexes
+    - binding scores and structures are model-derived approximations
+    - computational cost increases with peptide count and length
+
+  notes:
+    - prefer this tool when binding specificity matters more than diversity
+    - interface residue selection strongly influences design outcomes
+    - downstream ranking or validation is recommended
+    - suitable for therapeutic peptide and binder engineering pipelines
+
+
+Stability_Analysis:
+  category: protein_interaction_analysis
+
+  description: >
+    Analyzes protein–protein complex stability and interaction
+    energetics using the FoldX energy model. Computes interaction
+    energies, shared contacts, and stability scores for specified
+    chain combinations within structural complexes.
+
+  when_to_use:
+    - protein complex structures are already available
+    - interaction stability needs to be quantified
+    - comparing energetic quality of multiple complexes
+    - identifying stabilizing or destabilizing interface features
+    - post-design validation of binders or complexes
+
+  requires:
+    - protein_complex_structure
+    - chain_selection
+
+  optional_inputs:
+    - reference_interaction_identifiers
+    - multiple_complex_structures
+
+  produces:
+    - interaction_energy_metrics
+    - stability_scores
+    - shared_interaction_analysis
+
+  allowed_when:
+    - structural_complex_analysis_requested
+    - interaction_energy_evaluation_requested
+    - binder_or_complex_validation_workflow
+    - FoldX-compatible structures provided
+
+  forbidden_when:
+    - structure_prediction_requested
+    - sequence_design_requested
+    - peptide_generation_requested
+    - small_molecule_analysis_requested
+    - docking_or_dynamics_simulation_requested
+
+  constraints:
+    - operates only on provided PDB structures
+    - does not modify or optimize structures
+    - energy values are model-derived estimates
+    - accuracy depends on structural quality and preparation
+
+  notes:
+    - prefer this tool after binder or complex design steps
+    - ideal_interactions help contextualize energetic results
+    - useful for ranking and filtering candidate complexes
+    - not a substitute for experimental stability measurements
+
+
+graphdta:
+  category: binding_affinity_prediction
+
+  description: >
+    Predicts ligand–protein binding affinity or activity using
+    graph-based deep learning models. Accepts ligand SMILES and
+    protein sequence information to estimate interaction strength
+    in either regression or classification mode.
+
+  when_to_use:
+    - rapid affinity estimation is required
+    - screening large ligand libraries against protein targets
+    - early-stage prioritization before docking or dynamics
+    - binding likelihood needs to be predicted without structures
+    - data-driven interaction modeling is preferred
+
+  requires:
+    - ligand_smiles
+    - protein_sequence_or_uniprot_id
+
+  optional_inputs:
+    - activity_prediction_mode
+    - batch_ligand_inputs
+
+  produces:
+    - binding_affinity_predictions
+    - activity_class_predictions
+
+  allowed_when:
+    - ligand_target_pairs_provided
+    - affinity_or_activity_estimation_requested
+    - structure-independent prediction is acceptable
+    - early filtering or ranking workflow
+
+  forbidden_when:
+    - binding_pose_prediction_requested
+    - docking_or_dynamics_simulation_requested
+    - structure-based interaction analysis required
+    - experimental validation explicitly requested
+
+  constraints:
+    - predictions are model-based approximations
+    - does not generate binding poses or interfaces
+    - accuracy depends on training domain similarity
+    - protein structure is not explicitly considered
+
+  notes:
+    - prefer this tool before expensive structure-based methods
+    - regression mode is suited for potency ranking
+    - classification mode is useful for activity filtering
+    - results should be validated with downstream analysis
+

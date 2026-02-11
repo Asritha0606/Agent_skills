@@ -1,0 +1,419 @@
+# =========================
+# Tools
+# =========================
+tools:
+
+Random_Antibody_Generation:
+  category: de_novo_generation
+
+  description: >
+    Generates fully synthetic antibody sequences without relying on
+    any prior sequence, structural template, or germline constraint.
+    The tool is designed to explore broad antibody sequence space by
+    producing novel heavy- and light-chain combinations for early-stage
+    discovery and library initialization.
+
+  when_to_use:
+    - no existing antibody sequence or structure is available
+    - the user requests novel, random, or diverse antibody sequences
+    - early-stage antibody discovery or exploration is the goal
+    - generating bulk antibody libraries for downstream modeling
+    - initializing synthetic sequence libraries for experiments
+
+  requires: []
+
+  optional_inputs:
+    - experiment_id
+    - output_file_format
+    - number_of_samples
+
+  produces:
+    - antibody_sequence
+    - sequence_level_biochemical_properties
+    - heavy_chain_file
+    - light_chain_file
+
+  allowed_when:
+    - antibody_requested
+    - no_input_sequence_provided
+    - no_structure_provided
+
+  forbidden_when:
+    - antibody_sequence_provided
+    - antibody_structure_provided
+    - backbone_provided
+    - targeted_refinement_requested
+
+  constraints:
+    - does not perform targeted optimization or affinity maturation
+    - does not respect structural or binding constraints
+    - generated sequences may not be functional or developable
+    - unsuitable for late-stage optimization workflows
+
+  notes:
+    - prioritize for diversity and exploration, not precision
+    - backend ignores prompt and property fields; do not rely on them
+    - downstream filtering, modeling, or validation is required
+
+
+
+CDR_Generator:
+  category: targeted_mutagenesis
+
+  description: >
+    Performs targeted mutagenesis and redesign of specific antibody
+    complementarity-determining regions (CDRs) while preserving the
+    surrounding framework regions. The tool enables controlled
+    exploration of alternative CDR loop sequences within an existing
+    antibody scaffold.
+
+  when_to_use:
+    - an existing antibody sequence is available
+    - targeted optimization of antigen-binding regions is required
+    - affinity maturation or specificity tuning is the objective
+    - exploration of alternative CDR loop variants is desired
+    - framework regions must remain unchanged
+
+  requires:
+    - antibody_sequence
+    - cdr_region_specification
+    - numbering_scheme
+    - chain_type
+
+  optional_inputs:
+    - number_of_variants
+    - output_file_format
+
+  produces:
+    - antibody_sequence
+    - cdr_modified_variants
+
+  allowed_when:
+    - antibody_sequence_provided
+    - refinement_or_optimization_requested
+    - cdr_target_explicitly_specified
+
+  forbidden_when:
+    - no_input_sequence_provided
+    - de_novo_generation_requested
+    - full_length_antibody_redesign_requested
+
+  constraints:
+    - only modifies specified CDR regions
+    - framework and non-CDR residues remain unchanged
+    - cannot generate entirely novel antibodies
+    - depends on correct numbering scheme for accurate CDR localization
+
+  notes:
+    - best suited for late-stage optimization rather than early discovery
+    - incorrect numbering schemes may lead to unintended mutations
+    - downstream structural or binding validation is strongly recommended
+
+
+Antibody_Backbone_to_Sequence_Generation:
+  category: structure_guided_generation
+
+  description: >
+    Generates antibody heavy- or light-chain amino acid sequences
+    that are explicitly conditioned on a provided backbone structure.
+    Sequence proposals are constrained to be geometrically and
+    physically compatible with the supplied scaffold.
+
+  when_to_use:
+    - an antibody backbone or structural model is provided
+    - sequence design must respect a fixed 3D conformation
+    - structure-guided optimization is required
+    - workflows such as antibody humanization or stability engineering
+    - preparation of sequences for downstream structural modeling
+
+  requires:
+    - antibody_backbone_structure
+    - chain_selection
+
+  optional_inputs: []
+
+  produces:
+    - antibody_sequence
+    - sequence_level_biochemical_properties
+
+  allowed_when:
+    - antibody_structure_provided
+    - structure_conditioned_design_requested
+    - backbone_explicitly_specified
+
+  forbidden_when:
+    - no_structure_provided
+    - de_novo_generation_requested
+    - targeted_cdr_mutagenesis_requested
+    - unconstrained_sequence_exploration_requested
+
+  constraints:
+    - sequence design is limited by the fixed backbone geometry
+    - does not explore unconstrained sequence diversity
+    - unsuitable for discovery workflows without structural context
+    - output quality depends on correctness of the input backbone
+
+  notes:
+    - prefer this tool whenever structural fidelity is critical
+    - ensure backbone corresponds to the intended chain (heavy or light)
+    - downstream validation and property evaluation are recommended
+
+
+
+Function_Based_Enzyme_Generation:
+  category: function_driven_generation
+
+  description: >
+    Generates enzyme amino acid sequences conditioned on a specified
+    catalytic function defined by an Enzyme Commission (EC) number.
+    Sequence generation is guided by functional class rather than
+    structural templates or existing sequences.
+
+  when_to_use:
+    - a specific enzymatic function is required
+    - the user provides a valid EC number
+    - functional exploration of enzyme sequence space is desired
+    - biocatalyst discovery or benchmarking is the objective
+    - no structural template or reference sequence is available
+
+  requires:
+    - enzyme_function_label
+
+  optional_inputs:
+    - number_of_samples
+    - output_file_format
+
+  produces:
+    - enzyme_sequence
+    - sequence_level_biochemical_properties
+    - amino_acid_composition
+
+  allowed_when:
+    - enzyme_requested
+    - ec_number_provided
+    - function_driven_generation_requested
+
+  forbidden_when:
+    - protein_structure_provided
+    - sequence_refinement_requested
+    - structure_guided_design_requested
+
+  constraints:
+    - sequences are guided by functional class, not structural fidelity
+    - does not guarantee fold correctness or catalytic efficiency
+    - unsuitable for tasks requiring strict structural compatibility
+    - relies on correctness and specificity of the EC number
+
+  notes:
+    - prefer this tool when functional identity is the primary constraint
+    - downstream structure modeling or validation is recommended
+    - EC-level conditioning may produce diverse structural families
+
+
+
+
+Sequence_based_peptide_generation:
+  category: peptide_design
+
+  description: >
+    Generates peptide sequences derived from a provided antigen or
+    parent sequence by sampling relevant regions and applying controlled
+    sequence diversification. Designed for producing fixed-length
+    peptide variants suitable for screening and analysis.
+
+  when_to_use:
+    - a base antigen or protein sequence is provided
+    - the user requests peptide design rather than full-length proteins
+    - epitope discovery or immunogenic region exploration is required
+    - peptide libraries are needed for downstream screening
+    - fixed-length peptide variants are explicitly desired
+
+  requires:
+    - base_sequence
+    - peptide_length
+    - number_of_peptides
+
+  optional_inputs: []
+
+  produces:
+    - peptide_sequence
+    - peptide_scores
+    - sequence_level_biochemical_properties
+    - amino_acid_composition
+
+  allowed_when:
+    - sequence_provided
+    - peptide_generation_requested
+    - fixed_length_peptides_requested
+
+  forbidden_when:
+    - no_input_sequence_provided
+    - full_length_protein_or_antibody_requested
+    - de_novo_sequence_generation_requested
+    - structure_guided_design_requested
+
+  constraints:
+    - peptide generation is constrained to regions of the input sequence
+    - does not generate unconstrained or random full-length sequences
+    - peptide relevance depends on the quality of the input antigen
+    - not suitable for backbone- or structure-conditioned workflows
+
+  notes:
+    - peptide scores are heuristic and not definitive fitness measures
+    - downstream binding or immunogenicity evaluation is recommended
+    - use peptide length consistently to avoid mixed libraries
+
+
+Random_Controlled_Mutagenesis:
+  category: sequence_mutagenesis
+
+  description: >
+    Generates libraries of mutated protein sequence variants by
+    introducing random mutations in a controlled manner while
+    preserving user-specified protected residues. Designed to
+    simulate evolutionary variation around existing sequences.
+
+  when_to_use:
+    - existing protein sequences are available
+    - controlled sequence variation is desired
+    - stability, robustness, or activity exploration is the goal
+    - directed evolution–style mutation libraries are required
+    - specific residues must remain unchanged
+
+  requires:
+    - input_sequences
+    - mutation_count_per_epoch
+
+  optional_inputs:
+    - protected_residue_indices
+    - number_of_samples
+    - output_file_format
+
+  produces:
+    - mutated_protein_sequences
+    - sequence_level_biochemical_properties
+
+  allowed_when:
+    - protein_sequence_provided
+    - mutagenesis_requested
+    - protected_positions_specified_or_implicit
+
+  forbidden_when:
+    - no_input_sequence_provided
+    - de_novo_generation_requested
+    - structure_guided_design_requested
+    - single_point_targeted_edit_requested
+
+  constraints:
+    - mutations are introduced randomly, not rationally designed
+    - protected residues are never altered
+    - mutation density depends on user-specified mutation rate
+    - does not guarantee functional improvement
+
+  notes:
+    - prefer this tool for exploratory mutation, not precise edits
+    - downstream filtering or scoring is essential
+    - excessive mutation rates may lead to non-functional variants
+
+
+
+Unconditional_Sampling:
+  category: de_novo_generation
+
+  description: >
+    Generates entirely new protein sequences without conditioning
+    on function, structure, evolutionary information, or prior
+    sequence examples. Designed to explore protein sequence space
+    with minimal bias or constraint.
+
+  when_to_use:
+    - unconstrained protein sequence exploration is desired
+    - the user explicitly requests random or unguided protein generation
+    - benchmarking generative models is the objective
+    - hypothesis-free discovery workflows are being performed
+    - no functional, structural, or evolutionary inputs are available
+
+  requires: []
+
+  optional_inputs:
+    - samples_per_length
+    - sequence_lengths
+
+  produces:
+    - protein_sequence
+    - predicted_structures
+    - structure_files_archive
+
+  allowed_when:
+    - protein_requested
+    - no_functional_constraints_provided
+    - no_structural_constraints_provided
+    - no_reference_sequences_provided
+
+  forbidden_when:
+    - functional_requirements_specified
+    - structure_guided_design_requested
+    - sequence_refinement_requested
+    - property_optimization_requested
+
+  constraints:
+    - sequences are not optimized for function, stability, or binding
+    - generated diversity is high but largely unguided
+    - structural plausibility does not imply functional relevance
+    - unsuitable for targeted engineering or optimization workflows
+
+  notes:
+    - use sparingly due to lack of specificity
+    - downstream evaluation is mandatory to extract value
+    - best paired with filtering, clustering, or property prediction skills
+
+
+
+Ligand_MPNN:
+  category: ligand_conditioned_design
+
+  description: >
+    Designs protein sequences explicitly optimized for compatibility
+    with a specified ligand-binding environment. Sequence generation
+    is conditioned on a protein–ligand complex or backbone structure
+    to stabilize interactions within the binding site.
+
+  when_to_use:
+    - a ligand-binding objective is explicitly specified
+    - a protein–ligand complex or backbone structure is available
+    - binding-site optimization is the primary goal
+    - structure-aware affinity engineering is required
+    - high precision is preferred over broad sequence diversity
+
+  requires:
+    - protein_ligand_structure
+
+  optional_inputs:
+    - number_of_sequences
+
+  produces:
+    - protein_sequences
+    - fasta_sequence_files
+    - structure_support_files
+
+  allowed_when:
+    - ligand_binding_requested
+    - structure_provided
+    - ligand_context_present
+
+  forbidden_when:
+    - no_structure_provided
+    - unconstrained_sequence_generation_requested
+    - function_only_generation_requested
+    - random_exploration_requested
+
+  constraints:
+    - sequence diversity is constrained by ligand-binding geometry
+    - output quality depends on correctness of ligand placement
+    - not suitable for discovery workflows without ligand context
+    - does not optimize global protein properties beyond binding site
+
+  notes:
+    - prefer this tool when ligand compatibility is non-negotiable
+    - ensure ligand and protein coordinates are properly resolved
+    - downstream validation via docking or dynamics is recommended

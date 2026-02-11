@@ -1,0 +1,585 @@
+# =========================
+# Tools
+# =========================
+tools:
+structurebasedgen:
+  category: structure_based_generation
+
+  description: >
+    Generates de novo small molecules conditioned on a protein
+    binding pocket. Uses pocket-derived shape embeddings and
+    property-based filtering to produce structure-aware ligand
+    candidates.
+
+  when_to_use:
+    - a protein binding pocket structure is available
+    - ligand generation must be tailored to a specific target site
+    - de novo ligand discovery is required for a known binding site
+    - early-stage structure-guided design workflows
+    - property constraints should be enforced during generation
+
+  requires:
+    - binding_pocket_structure
+
+  optional_inputs:
+    - number_of_shapes
+    - number_of_decodings
+    - global_property_filters
+    - custom_property_filters
+
+  produces:
+    - generated_smiles
+    - physicochemical_property_table
+    - pocket_conditioned_ligands
+
+  allowed_when:
+    - protein_structure_provided
+    - binding_site_defined
+    - ligand_generation_requested
+
+  forbidden_when:
+    - no_structural_context_provided
+    - sequence_only_input_provided
+    - library_screening_only_requested
+    - retrosynthesis_or_reaction_planning_requested
+
+  constraints:
+    - generation is constrained by pocket geometry
+    - output diversity depends on shape and decoding parameters
+    - property filters may reduce chemical diversity
+    - does not perform docking or affinity prediction
+
+  notes:
+    - use downstream docking to validate binding hypotheses
+    - tune shape and decoding counts to balance diversity and quality
+    - ensure pocket extraction quality strongly influences results
+
+
+
+
+subgen:
+  category: molecular_substructure_extraction
+
+  description: >
+    Extracts chemically meaningful substructures (rationales) from
+    input molecules. Produces fragment-level representations that
+    can be filtered by property models and reused in downstream
+    generative or optimization workflows.
+
+  when_to_use:
+    - existing molecules need to be decomposed into fragments
+    - rationales or key substructures are required for design
+    - preparing fragment libraries for generative modeling
+    - scaffold analysis or fragment-based optimization workflows
+    - interpretability of chemical features is important
+
+  requires:
+    - smiles_library_csv
+
+  optional_inputs:
+    - maximum_atoms
+    - global_property_filters
+    - custom_property_filters
+
+  produces:
+    - extracted_substructures
+    - fragment_property_table
+    - rationale_scores
+
+  allowed_when:
+    - smiles_provided
+    - fragment_or_rationale_extraction_requested
+
+  forbidden_when:
+    - de_novo_generation_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+    - no_smiles_input_provided
+
+  constraints:
+    - extracted substructures are bounded by atom-count limits
+    - property filtering may reduce fragment diversity
+    - does not generate complete molecules
+    - quality depends on input molecule diversity
+
+  notes:
+    - extracted rationales are best used as seeds or constraints
+    - combine with generative tools for full ligand design
+    - review fragment size limits to balance reuse and specificity
+
+
+mergesub:
+  category: molecular_substructure_merging
+
+  description: >
+    Merges pairs of extracted rationales into larger composite
+    substructures. Designed to support iterative fragment-based
+    molecular design by composing higher-order chemical motifs.
+
+  when_to_use:
+    - rationales from subgen have already been generated
+    - fragment-based design requires increased structural complexity
+    - building composite substructures before full molecule generation
+    - preparing advanced seeds for generative or optimization tools
+    - property constraints must be enforced during fragment composition
+
+  requires:
+    - rationale_set_1
+    - rationale_set_2
+
+  optional_inputs:
+    - global_property_filters
+    - custom_property_filters
+
+  produces:
+    - merged_rationales
+    - composite_fragment_table
+    - fragment_classification_scores
+
+  allowed_when:
+    - rationale_inputs_provided
+    - fragment_composition_requested
+
+  forbidden_when:
+    - no_rationales_provided
+    - de_novo_molecule_generation_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+
+  constraints:
+    - operates only on rationale-level inputs
+    - merged outputs may not be chemically complete molecules
+    - property filtering may significantly reduce output diversity
+    - does not perform molecular optimization or docking
+
+  notes:
+    - best used after substructure extraction workflows
+    - merged rationales are suitable as seeds for generation tools
+    - review merged fragments for chemical plausibility before reuse
+
+
+
+gflowinf:
+  category: fragment_based_generation
+
+  description: >
+    Generates de novo small molecules using a fragment-based
+    generative flow model. Supports property-guided generation
+    through global or custom model constraints to bias chemical
+    space exploration.
+
+  when_to_use:
+    - de novo molecule generation is required
+    - fragment-based chemical space exploration is preferred
+    - property-guided generation is needed
+    - generating candidate libraries for downstream screening
+    - balancing diversity with design constraints
+
+  requires:
+    - generative_model_reference
+    - sample_count
+
+  optional_inputs:
+    - global_property_filters
+    - custom_property_filters
+
+  produces:
+    - generated_smiles
+    - physicochemical_property_table
+    - candidate_molecule_library
+
+  allowed_when:
+    - molecule_generation_requested
+    - fragment_based_design_strategy_selected
+
+  forbidden_when:
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+    - library_screening_only_requested
+    - no_generative_model_provided
+
+  constraints:
+    - generation quality depends on model training and fine-tuning
+    - property constraints may reduce output diversity
+    - does not guarantee synthetic feasibility
+    - does not perform structure-based binding evaluation
+
+  notes:
+    - tune sample counts to balance exploration and cost
+    - combine with screening and docking for candidate prioritization
+    - consider fragment diversity when interpreting outputs
+marsinf:
+  category: edit_based_molecular_generation
+
+  description: >
+    Generates new molecules by iteratively editing a reference
+    small-molecule scaffold. Supports property-guided modifications
+    using global or custom constraint models to explore local
+    chemical space around a known molecule.
+
+  when_to_use:
+    - a reference molecule or lead scaffold is available
+    - analog generation or lead optimization is required
+    - local chemical space exploration is preferred over de novo design
+    - property constraints must be enforced during generation
+    - refining molecules for downstream evaluation or synthesis
+
+  requires:
+    - reference_smiles
+    - generative_model_reference
+
+  optional_inputs:
+    - number_of_samples
+    - global_property_filters
+    - custom_property_filters
+
+  produces:
+    - generated_smiles
+    - optimized_molecule_set
+    - physicochemical_property_table
+
+  allowed_when:
+    - reference_molecule_provided
+    - molecular_editing_requested
+    - optimization_or_analog_generation_workflow
+
+  forbidden_when:
+    - no_reference_molecule_provided
+    - de_novo_generation_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+
+  constraints:
+    - explores local chemical neighborhoods only
+    - output diversity depends on edit operations and constraints
+    - property filters may restrict exploration breadth
+    - does not evaluate binding or biological activity directly
+
+  notes:
+    - ideal for lead optimization and SAR exploration
+    - combine with screening and docking for prioritization
+    - tune sample counts to balance coverage and computational cost
+
+
+
+pgmg_molgen:
+  category: pharmacophore_driven_generation
+
+  description: >
+    Generates small molecules that satisfy a predefined pharmacophore
+    hypothesis. Uses a structure-conditioned generative model to
+    ensure that spatial and functional interaction constraints are
+    preserved in all generated candidates.
+
+  when_to_use:
+    - a pharmacophore hypothesis is available
+    - ligand generation must satisfy known interaction features
+    - hypothesis-driven or target-focused design workflows
+    - expanding chemical space around validated interaction patterns
+    - reducing downstream filtering by enforcing constraints upfront
+
+  requires:
+    - pharmacophore_hypothesis_file
+
+  optional_inputs: []
+
+  produces:
+    - generated_smiles
+    - physicochemical_property_table
+    - pharmacophore_consistent_ligands
+
+  allowed_when:
+    - pharmacophore_provided
+    - molecule_generation_requested
+    - interaction_constraints_required
+
+  forbidden_when:
+    - no_pharmacophore_provided
+    - unconstrained_de_novo_generation_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+
+  constraints:
+    - generation is strictly constrained by pharmacophore features
+    - chemical diversity depends on hypothesis flexibility
+    - does not evaluate binding affinity directly
+    - hypothesis quality strongly influences output relevance
+
+  notes:
+    - best used after pharmacophore extraction or hypothesis generation
+    - combine with docking or screening for validation
+    - overly strict hypotheses may limit diversity excessively
+
+
+
+rgroup_enumeration:
+  category: combinatorial_library_design
+
+  description: >
+    Generates combinatorial molecular libraries by attaching
+    building-block fragments to defined R-group positions
+    on scaffold molecules. Supports optional evaluation
+    using global or custom property models.
+
+  when_to_use:
+    - scaffold structures with defined R-groups are available
+    - systematic substituent exploration is required
+    - combinatorial library generation is preferred over ML-based generation
+    - SAR or lead expansion workflows are being performed
+    - synthesis-aware, interpretable modifications are desired
+
+  requires:
+    - scaffold_file_with_rgroups
+    - building_block_library
+
+  optional_inputs:
+    - evaluation_models
+    - property_scoring_models
+
+  produces:
+    - combinatorial_molecule_library
+    - annotated_smiles_table
+    - physicochemical_property_metrics
+
+  allowed_when:
+    - scaffold_and_fragments_provided
+    - combinatorial_expansion_requested
+    - chemistry_driven_design_workflow
+
+  forbidden_when:
+    - no_defined_scaffold_provided
+    - de_novo_generation_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_prediction_requested
+
+  constraints:
+    - generation limited to defined R-group positions
+    - library size grows combinatorially with fragments
+    - does not introduce novel core scaffolds
+    - property evaluation does not imply biological activity
+
+  notes:
+    - ideal for SAR exploration and late-stage optimization
+    - fragment library quality strongly affects output usefulness
+    - consider downstream filtering to manage library size
+
+
+mcts:
+  category: lead_optimization
+
+  description: >
+    Optimizes a single lead molecule using Monte Carlo Tree Search.
+    Iteratively edits the starting scaffold while maximizing a
+    reward function under global and custom property constraints,
+    including ADMET and selectivity considerations.
+
+  when_to_use:
+    - a validated hit or lead molecule is available
+    - multi-objective optimization is required
+    - ADMET and developability constraints must be enforced
+    - target and off-target effects should be considered
+    - late-stage or focused lead refinement workflows
+
+  requires:
+    - starting_smiles
+    - optimization_reward_definition
+
+  optional_inputs:
+    - target_sequence
+    - off_target_sequences
+    - global_property_constraints
+    - custom_property_constraints
+    - number_of_generated_molecules
+
+  produces:
+    - optimized_smiles_set
+    - reward_scores
+    - ADMET_and_physicochemical_metrics
+
+  allowed_when:
+    - lead_optimization_requested
+    - starting_molecule_provided
+    - multi_constraint_objective_defined
+
+  forbidden_when:
+    - no_starting_molecule_provided
+    - de_novo_generation_requested
+    - combinatorial_library_enumeration_requested
+    - docking_or_dynamics_requested
+
+  constraints:
+    - explores chemical space locally around the starting scaffold
+    - optimization quality depends on reward function definition
+    - does not perform explicit docking or simulation
+    - may converge to local optima under strict constraints
+
+  notes:
+    - ideal for late-stage lead optimization
+    - reward design critically influences outcomes
+    - combine with screening or docking for validation
+
+
+
+augmented:
+  category: rl_augmented_smiles_generation
+
+  description: >
+    Generates and optimizes small molecules using reinforcement
+    learning combined with SMILES augmentation. Expands chemical
+    exploration while optimizing candidates against multi-objective
+    reward functions and property constraints.
+
+  when_to_use:
+    - reinforcement-learning–based molecular generation is desired
+    - broader chemical exploration than local scaffold edits is required
+    - property-driven optimization without strict combinatorial rules
+    - early or mid-stage lead discovery workflows
+    - improving diversity beyond standard generative baselines
+
+  requires:
+    - reward_function_definition
+
+  optional_inputs:
+    - initial_smiles_dataset
+    - target_sequence
+    - off_target_sequences
+    - global_property_constraints
+    - custom_property_constraints
+    - model_checkpoint_reference
+    - number_of_generation_steps
+
+  produces:
+    - generated_smiles
+    - reward_scores
+    - ADMET_and_physicochemical_metrics
+
+  allowed_when:
+    - rl_based_generation_requested
+    - multi_objective_optimization_defined
+    - chemical_space_exploration_needed
+
+  forbidden_when:
+    - strict_scaffold_preservation_required
+    - combinatorial_enumeration_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+
+  constraints:
+    - optimization quality depends strongly on reward design
+    - generated molecules may diverge significantly from input chemistry
+    - does not guarantee synthetic feasibility
+    - does not perform explicit structure-based evaluation
+
+  notes:
+    - useful when other generators stagnate or overfit
+    - SMILES augmentation increases exploration robustness
+    - combine with screening or docking for validation
+
+
+
+reinvent:
+  category: reinforcement_learning_lead_generation
+
+  description: >
+    Generates small molecules using the REINVENT reinforcement
+    learning framework. Optimizes molecular generation against
+    multi-objective reward functions with optional fine-tuning
+    on known hit molecules.
+
+  when_to_use:
+    - reinforcement-learning–based molecular generation is required
+    - early-stage lead discovery or diversification workflows
+    - property-driven optimization without fixed scaffolds
+    - reward-based exploration of global chemical space
+    - biasing generation toward known chemistry without strict constraints
+
+  requires:
+    - reward_function_definition
+
+  optional_inputs:
+    - initial_smiles_dataset
+    - model_checkpoint_reference
+    - target_sequence
+    - off_target_sequences
+    - global_property_constraints
+    - custom_property_constraints
+    - fine_tuning_steps
+
+  produces:
+    - generated_smiles
+    - reward_scores
+    - ADMET_and_physicochemical_metrics
+
+  allowed_when:
+    - rl_based_generation_requested
+    - reward_objective_defined
+    - chemical_space_exploration_needed
+
+  forbidden_when:
+    - strict_scaffold_preservation_required
+    - combinatorial_enumeration_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+
+  constraints:
+    - optimization quality depends on reward function design
+    - exploration may drift away from known chemistry
+    - does not guarantee synthetic feasibility
+    - does not perform explicit structure-based evaluation
+
+  notes:
+    - considered a standard baseline for RL-based molecular generation
+    - fine-tuning can reduce diversity if over-applied
+    - combine with screening or docking for candidate validation
+
+
+crem:
+  category: fragment_based_local_optimization
+
+  description: >
+    Optimizes a lead molecule by applying fragment-level
+    insertions, deletions, or replacements using a predefined
+    fragment library. Supports optional property-based
+    filtering during optimization.
+
+  when_to_use:
+    - a reference lead molecule is available
+    - local chemical space exploration is desired
+    - fragment-level edits are preferred over global generation
+    - SAR or medicinal-chemistry–driven optimization workflows
+    - interpretable, chemistry-consistent modifications are required
+
+  requires:
+    - reference_smiles
+    - fragment_library
+
+  optional_inputs:
+    - global_property_constraints
+    - custom_property_constraints
+
+  produces:
+    - locally_optimized_smiles
+    - fragment_annotated_variants
+    - physicochemical_property_metrics
+
+  allowed_when:
+    - starting_molecule_provided
+    - local_optimization_requested
+    - fragment_based_strategy_selected
+
+  forbidden_when:
+    - no_reference_molecule_provided
+    - de_novo_generation_requested
+    - global_rl_based_generation_requested
+    - docking_or_dynamics_requested
+
+  constraints:
+    - exploration limited to fragment-level modifications
+    - diversity depends on fragment library coverage
+    - does not introduce entirely new scaffolds
+    - property filters do not imply biological activity
+
+  notes:
+    - ideal for SAR-driven lead refinement
+    - fragment library quality directly impacts results
+    - combine with screening or docking for validation

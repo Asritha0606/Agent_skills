@@ -1,0 +1,160 @@
+# =========================
+# Tools
+# =========================
+tools:
+
+propinf:
+  category: molecular_property_prediction
+
+  description: >
+    Predicts chemical and ADMET-related properties for small
+    molecules using global platform models or user-provided
+    custom models. Supports uncertainty estimation and
+    applicability-domain analysis.
+
+  when_to_use:
+    - molecules are already defined as SMILES
+    - ADMET or physicochemical properties must be predicted
+    - candidate molecules need to be ranked or filtered
+    - model confidence or applicability must be assessed
+    - custom or project-specific property models are required
+
+  requires:
+    - smiles_dataset
+    - prediction_models
+
+  optional_inputs:
+    - uncertainty_estimation
+    - applicability_domain_analysis
+
+  produces:
+    - predicted_property_values
+    - uncertainty_metrics
+    - applicability_domain_flags
+
+  allowed_when:
+    - property_prediction_requested
+    - molecular_evaluation_workflow
+    - no_structure_modification_required
+
+  forbidden_when:
+    - de_novo_generation_requested
+    - molecular_editing_or_optimization_requested
+    - docking_or_dynamics_requested
+    - retrosynthesis_or_reaction_planning_requested
+
+  constraints:
+    - predictions depend on model training domain
+    - uncertainty reflects model confidence, not experimental error
+    - applicability-domain flags should be considered in prioritization
+    - does not modify or generate molecular structures
+
+  notes:
+    - ideal for downstream evaluation of generated libraries
+    - combine with screening tools for ranking and pruning
+    - custom models enable project-specific endpoints
+
+
+automl:
+  category: custom_model_training
+
+  description: >
+    Trains a custom regression or classification model for
+    molecular property prediction using user-provided
+    SMILES–property datasets. Supports AutoML-based
+    model selection and feature engineering.
+
+  when_to_use:
+    - no suitable pretrained model exists for the desired property
+    - users provide labeled SMILES–property datasets
+    - project-specific or proprietary endpoints must be modeled
+    - custom prediction models are required for downstream inference
+    - experimental data needs to be converted into reusable predictors
+
+  requires:
+    - labeled_smiles_dataset
+    - prediction_task_type
+    - feature_representation
+
+  optional_inputs:
+    - dataset_split_strategy
+    - specific_model_selection
+    - data_transformation_method
+
+  produces:
+    - trained_property_model
+    - prediction_artifacts
+    - uncertainty_estimates
+
+  allowed_when:
+    - model_training_requested
+    - labeled_training_data_provided
+    - custom_property_endpoint_defined
+
+  forbidden_when:
+    - no_labeled_data_available
+    - direct_property_prediction_requested
+    - molecular_generation_or_editing_requested
+    - docking_or_simulation_requested
+
+  constraints:
+    - model quality depends on dataset size and quality
+    - scaffold-based splits may reduce apparent performance but improve realism
+    - trained models must be validated before production use
+    - does not perform inference on new molecules directly
+
+  notes:
+    - outputs are intended for reuse in property inference workflows
+    - combine with inference tools to apply trained models
+    - uncertainty estimates reflect model confidence, not experimental noise
+
+
+phcore_gen:
+  category: pharmacophore_generation
+
+  description: >
+    Generates pharmacophore hypotheses by extracting
+    interaction features from ligand structures or
+    protein–ligand complexes. Identifies key functional
+    groups and spatial constraints relevant for binding.
+
+  when_to_use:
+    - protein–ligand complex structures are available
+    - binding interactions must be abstracted into features
+    - hypothesis-driven ligand design is required
+    - pharmacophore-based screening or generation is planned
+    - interpretability of binding interactions is important
+
+  requires:
+    - protein_ligand_structure
+
+  optional_inputs:
+    - feature_selection
+    - ligand_identifier
+
+  produces:
+    - pharmacophore_hypothesis_file
+    - feature_summary_table
+    - reference_structure_artifacts
+
+  allowed_when:
+    - structural_binding_information_provided
+    - interaction_feature_extraction_requested
+    - property_abstraction_workflow
+
+  forbidden_when:
+    - no_structural_data_provided
+    - direct_property_scoring_requested
+    - de_novo_molecule_generation_requested
+    - docking_or_dynamics_requested
+
+  constraints:
+    - hypothesis quality depends on input structure quality
+    - extracted features represent interactions, not affinity
+    - does not evaluate or rank molecules directly
+    - output is descriptive rather than predictive
+
+  notes:
+    - often used upstream of pharmacophore-based generation tools
+    - multiple hypotheses may be generated for complex systems
+    - validate hypotheses using known active ligands when possible

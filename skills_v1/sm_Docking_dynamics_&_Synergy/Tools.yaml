@@ -1,0 +1,232 @@
+# =========================
+# Tools
+# =========================
+
+tools:
+
+  diffdock:
+    category: docking
+
+    description: >
+      Performs deep-learning–based protein–ligand docking using
+      the DiffDock model. Predicts ligand binding poses, ranks
+      candidates, and provides confidence scores and interaction
+      summaries based on learned structural priors.
+
+    when_to_use:
+      - a processed protein structure is available
+      - ligand library is provided as SMILES
+      - binding pose prediction is required
+      - rapid structure-based screening is preferred
+      - classical docking is too slow or coarse
+
+    requires:
+      - processed_protein_structure
+      - ligand_smiles_library
+
+    optional_inputs:
+      - pose_file_generation
+
+    produces:
+      - ranked_ligand_poses
+      - confidence_scores
+      - interaction_summaries
+      - optional_sdf_pose_files
+
+    allowed_when:
+      - structure_based_docking_requested
+      - ligand_pose_prediction_required
+      - interaction_ranking_needed
+      - downstream filtering or clustering planned
+
+    forbidden_when:
+      - no protein structure available
+      - sequence_only input provided
+      - molecular dynamics simulation requested
+      - binding free energy calculation required
+      - synthesis or reaction planning requested
+
+    constraints:
+      - docking quality depends on protein structure preparation
+      - confidence scores are relative, not absolute affinities
+      - does not perform dynamic relaxation or MD refinement
+      - not a substitute for experimental binding assays
+
+    notes:
+      - prefer this tool for fast pose exploration and ranking
+      - enable SDF output only when pose inspection is required
+      - consider follow-up validation for high-confidence hits
+      - combine with filtering or clustering to reduce noise
+
+
+
+
+  synergy_dds:
+    category: drug_drug_synergy
+
+    description: >
+      Predicts drug–drug or drug–library synergy scores across
+      cancer or organ-specific cell-line categories. Computes
+      synergy profiles for individual cell lines and reports
+      an aggregated mean synergy score for prioritization.
+
+    when_to_use:
+      - evaluating combination therapies
+      - screening drug pairs for synergistic effects
+      - testing a drug against a molecule library
+      - prioritizing combinations for cancer cell lines
+      - early-stage combination hypothesis generation
+
+    requires:
+      - at_least_one_drug_smiles
+      - cell_line_category
+
+    optional_inputs:
+      - second_drug_smiles
+      - molecule_library_csv
+
+    produces:
+      - per_cell_line_synergy_scores
+      - mean_synergy_score
+      - synergy_summary_table
+
+    allowed_when:
+      - combination_therapy_requested
+      - drug_synergy_analysis_needed
+      - phenotypic_response_modeling_appropriate
+      - downstream ranking or filtering planned
+
+    forbidden_when:
+      - single_drug_property_prediction_requested
+      - molecular docking or binding pose required
+      - mechanism_of_action analysis requested
+      - chemical synthesis or reaction planning requested
+
+    constraints:
+      - predictions are statistical, not mechanistic
+      - synergy scores depend on cell-line category selection
+      - does not model pharmacokinetics or toxicity
+      - not a substitute for experimental synergy assays
+
+    notes:
+      - use mean_score for high-level prioritization
+      - inspect individual cell-line scores for specificity
+      - ideal for narrowing combinatorial search space
+      - experimental validation is strongly recommended
+
+
+
+  mds:
+    category: molecular_dynamics
+
+    description: >
+      Performs full molecular dynamics simulations of
+      protein–ligand systems using OpenMM. Simulates
+      atomic motion under defined thermodynamic and
+      force-field conditions to assess stability,
+      equilibration, and conformational behavior.
+
+    when_to_use:
+      - dynamic stability of protein–ligand complexes is required
+      - post-docking relaxation or refinement is needed
+      - conformational flexibility must be evaluated
+      - binding persistence over time is of interest
+      - high-fidelity structural validation is required
+
+    requires:
+      - protein_structure
+      - ligand_structure
+
+    optional_inputs:
+      - preassembled_complex_structure
+      - trajectory_output_flag
+      - ionic_conditions
+      - solvent_model_selection
+
+    produces:
+      - equilibrated_final_structure
+      - molecular_dynamics_trajectory
+      - time-resolved_conformational_data
+
+    allowed_when:
+      - docking_completed
+      - stable_complex_assessment_requested
+      - dynamic_behavior_analysis_required
+      - sufficient_compute_resources_available
+
+    forbidden_when:
+      - rapid_screening_requested
+      - static_structure_sufficient
+      - early_stage_filtering_only
+      - cost_or_time_constraints_strict
+      - no_structural_inputs_available
+
+    constraints:
+      - computationally expensive and time-intensive
+      - sensitive to force-field and parameter choices
+      - results depend on simulation length and setup
+      - not suitable for high-throughput workflows
+
+    notes:
+      - use after docking or binding pose selection
+      - trajectory analysis is required for meaningful insight
+      - short simulations assess stability, not kinetics
+      - experimental validation is still recommended
+
+
+  gromacs:
+    category: molecular_dynamics
+
+    description: >
+      Executes full molecular dynamics simulations using
+      the GROMACS engine. Provides fine-grained control
+      over force fields, solvent models, thermodynamic
+      parameters, and trajectory sampling for
+      protein–ligand systems.
+
+    when_to_use:
+      - high-fidelity molecular dynamics is required
+      - long or production-scale simulations are needed
+      - force-field or solvent choice must be explicitly controlled
+      - detailed conformational or stability analysis is required
+      - GROMACS-specific workflows are mandated
+
+    requires:
+      - protein_structure
+      - ligand_structure
+
+    optional_inputs:
+      - stream_configuration_file
+      - trajectory_sampling_interval
+      - solvent_model
+      - force_field_selection
+
+    produces:
+      - equilibrated_structure
+      - molecular_dynamics_trajectory
+      - time-resolved_simulation_data
+
+    allowed_when:
+      - docking_or_complex_preparation_completed
+      - dynamic_validation_requested
+      - sufficient_compute_resources_available
+      - reproducible_md_workflow_required
+
+    forbidden_when:
+      - rapid_or_high-throughput_screening_requested
+      - static_structural_analysis_sufficient
+      - early_stage_filtering_only
+      - compute_or_time_budget_limited
+      - no_structural_inputs_available
+
+    constraints:
+      - computationally intensive and time-consuming
+      - requires careful parameter and force-field selection
+      - results sensitive to simulation setup and duration
+      - not suitable for exploratory or low-cost workflows
+
+    notes:
+      - prefer this tool for production or publication-grade MD
+      - trajectory analysis is required to extract insights
+      - short simulations assess stability, not kinetics
+      - should follow docking or structure preparation steps

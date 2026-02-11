@@ -1,0 +1,260 @@
+# =========================
+# Tools
+# =========================
+tools:
+sim_screen:
+  category: similarity_screening
+
+  description: >
+    Filters molecular libraries by computing structural similarity
+    to one or more reference molecules and retaining candidates
+    above a defined similarity threshold.
+
+  when_to_use:
+    - reference molecules are available
+    - analogue discovery or lead hopping is desired
+    - large libraries need to be pruned efficiently
+    - chemical continuity with known ligands is important
+    - similarity-based prioritization is required
+
+  requires:
+    - reference_smiles_or_library
+    - molecule_library
+    - similarity_threshold
+
+  optional_inputs:
+    - multiple_reference_molecules
+
+  produces:
+    - similarity_filtered_library
+    - similarity_scores
+    - pass_fail_labels
+
+  allowed_when:
+    - similarity_screening_requested
+    - reference_molecule_provided
+    - comparative_filtering_workflow
+
+  forbidden_when:
+    - no_reference_molecule_available
+    - de_novo_generation_requested
+    - property_prediction_requested
+    - molecular_editing_or_optimization_requested
+
+  constraints:
+    - similarity reflects structural resemblance, not biological activity
+    - threshold selection strongly influences library size
+    - fingerprint choice affects similarity outcomes
+    - may exclude novel but active chemotypes
+
+  notes:
+    - commonly used early in screening pipelines
+    - consider combining with novelty or diversity filters
+    - best applied before costly downstream analysis
+
+
+
+
+ph_screening:
+  category: pharmacophore_screening
+
+  description: >
+    Filters molecular libraries by matching compounds against
+    a predefined pharmacophore hypothesis. Retains molecules
+    that satisfy a minimum number of required interaction features.
+
+  when_to_use:
+    - a pharmacophore hypothesis has already been generated
+    - binding interaction constraints must be enforced
+    - scaffold diversity is acceptable as long as interactions are preserved
+    - hypothesis-driven screening is required
+    - large libraries need to be pruned using interaction logic
+
+  requires:
+    - pharmacophore_hypothesis_file
+    - molecule_library
+    - minimum_feature_match_threshold
+
+  optional_inputs:
+    - pose_generation_outputs
+    - visualization_artifacts
+
+  produces:
+    - pharmacophore_filtered_library
+    - feature_match_scores
+    - pose_and_interaction_annotations
+
+  allowed_when:
+    - pharmacophore_hypothesis_provided
+    - interaction_based_filtering_requested
+    - screening_workflow_active
+
+  forbidden_when:
+    - no_pharmacophore_hypothesis_available
+    - similarity_only_screening_requested
+    - property_prediction_requested
+    - molecular_generation_or_editing_requested
+
+  constraints:
+    - results depend on hypothesis quality and feature selection
+    - does not quantify binding affinity
+    - 3D conformer generation may affect match outcomes
+    - stricter feature thresholds reduce library size
+
+  notes:
+    - commonly used after pharmacophore generation tools
+    - complements similarity and substructure screening
+    - useful for preserving interaction logic across diverse chemotypes
+
+
+
+
+substructure_screen:
+  category: fragment/toxicophore_screening
+
+  description: >
+    Filters molecular libraries by detecting the presence
+    or absence of predefined substructures or toxicophores
+    using exact or graph-based matching.
+
+  when_to_use:
+    - toxicophore removal is required
+    - specific fragments must be enforced or excluded
+    - scaffold compliance rules must be applied
+    - safety-driven or medicinal chemistry filters are needed
+    - binary structural constraints are preferred
+
+  requires:
+    - molecule_library
+    - substructure_definitions
+    - screening_direction
+
+  optional_inputs:
+    - matching_method_selection
+    - annotation_labels
+
+  produces:
+    - structure_filtered_library
+    - substructure_match_annotations
+    - inclusion_exclusion_labels
+
+  allowed_when:
+    - structural_rule_enforcement_requested
+    - toxic_alert_screening_required
+    - fragment_presence_constraints_defined
+
+  forbidden_when:
+    - similarity_based_screening_requested
+    - pharmacophore_matching_requested
+    - property_prediction_requested
+    - molecular_generation_or_optimization_requested
+
+  constraints:
+    - operates on exact or graph-based substructure matches
+    - does not evaluate binding, affinity, or activity
+    - strict filtering may significantly reduce library size
+    - outcome depends on quality of substructure definitions
+
+  notes:
+    - commonly used for toxicity elimination and rule enforcement
+    - complements similarity and pharmacophore screening
+    - best applied before computationally expensive workflows
+
+
+novelty:
+  category: novelty_patentability
+
+  description: >
+    Assesses molecular novelty or potential patentability
+    by comparing candidate molecules against curated
+    chemical databases such as ChEMBL or SureChEMBL.
+
+  when_to_use:
+    - novelty or uniqueness assessment is required
+    - patentability evaluation is part of the workflow
+    - lead prioritization based on unexplored chemical space
+    - redundancy with known molecules must be avoided
+    - innovation-focused screening is desired
+
+  requires:
+    - molecule_library
+    - reference_database_selection
+    - structure_search_mode
+
+  optional_inputs:
+    - similarity_threshold
+    - novelty_annotation_level
+
+  produces:
+    - novelty_annotations
+    - reference_match_details
+    - novelty_flagged_molecule_table
+
+  allowed_when:
+    - external_database_comparison_requested
+    - patent_landscape_awareness_needed
+    - post-generation_or_post-screening_stage
+
+  forbidden_when:
+    - property_prediction_requested
+    - molecular_generation_requested
+    - docking_or_dynamics_requested
+    - internal_similarity_screening_only_required
+
+  constraints:
+    - novelty is relative to selected reference database
+    - similarity-based novelty depends on chosen threshold
+    - does not guarantee legal patentability
+    - database coverage limits novelty interpretation
+
+  notes:
+    - best used after initial filtering and optimization
+    - complements similarity and substructure screening
+    - recommended before lead commitment or disclosure
+
+
+tanimoto:
+  category: molecule_similarity
+
+  description: >
+    Computes the Tanimoto similarity coefficient
+    between two individual molecules represented
+    as SMILES strings using molecular fingerprints.
+
+  when_to_use:
+    - direct similarity between two molecules is required
+    - validating similarity thresholds
+    - comparing a generated molecule to a reference
+    - computing similarity-based rewards or penalties
+    - debugging or analyzing screening outputs
+
+  requires:
+    - reference_smiles
+    - query_smiles
+
+  optional_inputs: []
+
+  produces:
+    - tanimoto_similarity_score
+
+  allowed_when:
+    - pairwise_similarity_requested
+    - atomic_similarity_computation_needed
+    - internal_similarity_metric_required
+
+  forbidden_when:
+    - library_screening_requested
+    - filtering_or_ranking_required
+    - novelty_assessment_requested
+    - pharmacophore_or_substructure_screening_requested
+
+  constraints:
+    - compares exactly two molecules
+    - returns a single numeric similarity value
+    - fingerprint choice is fixed internally
+    - no thresholding or decision logic applied
+
+  notes:
+    - low-level utility tool
+    - often embedded inside higher-order workflows
+    - not a replacement for similarity screening tools

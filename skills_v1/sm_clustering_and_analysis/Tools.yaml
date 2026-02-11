@@ -1,0 +1,361 @@
+# =========================
+# Tools
+# =========================
+tools:
+
+butina:
+  category: molecular_clustering
+
+  description: >
+    Clusters small molecules using the Butina algorithm based on
+    structural similarity or Murcko scaffold similarity. Supports
+    cluster sampling and optional dimensionality reduction for
+    visualization and analysis.
+
+  when_to_use:
+    - molecular libraries need to be grouped by similarity
+    - chemical diversity assessment is required
+    - redundant molecules must be reduced
+    - scaffold-based organization is desired
+    - representative compound selection is needed
+
+  requires:
+    - molecular_library_csv
+
+  optional_inputs:
+    - similarity_cutoff
+    - clustering_mode
+    - sampling_strategy
+    - dimensionality_reduction
+
+  produces:
+    - clustered_molecule_labels
+    - similarity_based_groups
+    - representative_compound_sets
+
+  allowed_when:
+    - molecule_set_provided
+    - clustering_or_grouping_requested
+    - library_analysis_or_validation_workflow
+    - SAR_or_diversity_analysis
+
+  forbidden_when:
+    - de_novo_generation_requested
+    - molecular_optimization_requested
+    - binding_affinity_prediction_requested
+    - docking_or_dynamics_requested
+
+  constraints:
+    - clustering depends strongly on similarity cutoff choice
+    - does not generate or modify molecules
+    - cluster boundaries are heuristic, not absolute
+    - unsuitable for activity inference without additional data
+
+  notes:
+    - Murcko–Butina is preferred for scaffold-level analysis
+    - full Butina clustering captures substituent-level similarity
+    - sampling helps control downstream computational cost
+    - results should be interpreted in context of project goals
+
+
+
+
+kmeans:
+  category: molecular_clustering
+
+  description: >
+    Groups molecules into a fixed number of clusters using the
+    k-means algorithm based on descriptor or fingerprint features.
+    Provides structured partitioning of chemical space for analysis
+    and dataset organization.
+
+  when_to_use:
+    - a fixed number of molecular groups is required
+    - dataset segmentation or partitioning is needed
+    - exploratory diversity analysis is being performed
+    - comparative analysis across clusters is desired
+    - balanced grouping is more important than similarity thresholds
+
+  requires:
+    - molecular_library_csv
+
+  optional_inputs:
+    - feature_representation
+    - dimensionality_reduction
+    - cluster_count
+
+  produces:
+    - molecule_cluster_labels
+    - partitioned_molecule_groups
+    - cluster_assignment_tables
+
+  allowed_when:
+    - clustering_or_grouping_requested
+    - fixed_partitioning_of_dataset_required
+    - exploratory_analysis_workflow
+    - chemical_space_segmentation
+
+  forbidden_when:
+    - redundancy_elimination_requested
+    - similarity_threshold_clustering_required
+    - de_novo_generation_requested
+    - binding_or_activity_prediction_requested
+
+  constraints:
+    - number_of_clusters must be specified in advance
+    - clustering outcome depends on feature choice
+    - does not reflect explicit chemical similarity thresholds
+    - cluster assignments may vary with initialization
+
+  notes:
+    - descriptor-based clustering emphasizes physicochemical trends
+    - fingerprint-based clustering emphasizes structural similarity
+    - dimensionality reduction is for visualization, not clustering logic
+    - results should be interpreted comparatively, not absolutely
+
+
+
+is_smiles:
+  category: validation
+
+  description: >
+    Validates whether a given text string is a syntactically
+    correct SMILES representation. Returns a boolean indicating
+    validity without performing any chemical analysis.
+
+  when_to_use:
+    - validating user-provided SMILES input
+    - sanitizing datasets before chemical processing
+    - guarding downstream tools against invalid molecules
+    - filtering outputs from generative models
+    - early input validation in automated workflows
+
+  requires:
+    - smiles_string
+
+  optional_inputs:
+    - none
+
+  produces:
+    - smiles_validity_flag
+
+  allowed_when:
+    - SMILES_input_provided
+    - molecule_representation_needs_validation
+    - preprocessing_or_sanity_check_step
+
+  forbidden_when:
+    - property_prediction_requested
+    - molecular_generation_requested
+    - similarity_or_clustering_requested
+    - chemical_transformation_requested
+
+  constraints:
+    - performs syntactic validation only
+    - does not assess chemical realism or stability
+    - does not compute properties or descriptors
+    - returns a binary true/false result
+
+  notes:
+    - should be used early to prevent cascading failures
+    - ideal as a gate before expensive modeling tools
+    - invalid SMILES should be rejected or corrected upstream
+
+
+
+
+is_multiple_smiles:
+  category: validation
+
+  description: >
+    Detects whether a SMILES string represents multiple
+    molecular fragments separated by dot notation.
+    Returns a boolean indicating multi-component presence.
+
+  when_to_use:
+    - validating raw or user-provided SMILES input
+    - detecting salts, mixtures, or counter-ions
+    - guarding single-molecule-only tools
+    - preprocessing datasets before modeling or screening
+    - checking generative model outputs
+
+  requires:
+    - smiles_string
+
+  optional_inputs:
+    - none
+
+  produces:
+    - multi_fragment_flag
+
+  allowed_when:
+    - SMILES_input_provided
+    - molecule_component_check_required
+    - preprocessing_or_validation_step
+
+  forbidden_when:
+    - property_prediction_requested
+    - clustering_or_similarity_requested
+    - fragment_selection_already_completed
+    - chemical_transformation_requested
+
+  constraints:
+    - detects fragment separation only
+    - does not rank or select fragments
+    - does not assess chemical validity
+    - returns a binary true/false signal
+
+  notes:
+    - commonly paired with fragment selection tools
+    - useful before normalization or filtering steps
+    - multi-fragment detection does not imply invalidity
+
+
+
+
+largest_mol:
+  category: fragment_selection
+
+  description: >
+    Extracts the largest valid molecular fragment from
+    a multi-component SMILES representation and returns
+    it as a single SMILES string.
+
+  when_to_use:
+    - multi-fragment SMILES detected
+    - normalization of salts or mixtures required
+    - downstream tools require a single molecule
+    - dataset cleanup and standardization workflows
+    - pragmatic molecule simplification preferred
+
+  requires:
+    - multi_component_smiles
+
+  optional_inputs:
+    - none
+
+  produces:
+    - single_molecule_smiles
+
+  allowed_when:
+    - fragment_resolution_required
+    - single_molecule_representation_needed
+    - preprocessing_or_cleanup_step
+
+  forbidden_when:
+    - fragment-level analysis_requested
+    - salt_or_counterion_analysis_requested
+    - chemical reaction modeling_requested
+    - explicit mixture modeling_requested
+
+  constraints:
+    - selects fragment based on size only
+    - does not evaluate biological relevance
+    - does not preserve full multi-component context
+    - assumes fragment validity is syntactic
+
+  notes:
+    - commonly follows multi-SMILES detection
+    - ideal for enforcing single-molecule assumptions
+    - downstream validation is still recommended
+
+
+
+is_cas:
+  category: identifier_validation
+
+  description: >
+    Validates whether a given string matches the
+    syntactic format of a CAS Registry Number
+    using pattern-based checks.
+
+  when_to_use:
+    - disambiguating user-provided molecular identifiers
+    - detecting CAS numbers before structure-based processing
+    - routing inputs to lookup or resolution workflows
+    - validating identifier formats in datasets
+    - rejecting malformed registry identifiers
+
+  requires:
+    - identifier_string
+
+  optional_inputs:
+    - none
+
+  produces:
+    - cas_format_validity_flag
+
+  allowed_when:
+    - identifier_input_provided
+    - identifier_type_ambiguous
+    - preprocessing_or_classification_step
+
+  forbidden_when:
+    - molecular_structure_processing_requested
+    - property_prediction_requested
+    - similarity_or_clustering_requested
+    - biological modeling_requested
+
+  constraints:
+    - validates format only, not registry existence
+    - does not resolve CAS to molecular structure
+    - does not perform database lookup
+    - returns a binary true/false result
+
+  notes:
+    - often paired with identifier resolution tools
+    - useful for early input routing decisions
+    - valid format does not guarantee valid substance
+
+
+query2smiles:
+  category: identifier_resolution
+
+  description: >
+    Resolves chemical identifiers such as names,
+    CAS numbers, InChI keys, or molecular formulas
+    into canonical SMILES representations, along
+    with supporting metadata and cross-checks.
+
+  when_to_use:
+    - user provides non-SMILES chemical identifiers
+    - CAS numbers or compound names need resolution
+    - identifier type is ambiguous or mixed
+    - structural workflows require SMILES input
+    - input normalization before modeling or screening
+
+  requires:
+    - molecule_identifier
+
+  optional_inputs:
+    - identifier_type
+
+  produces:
+    - canonical_smiles
+    - identifier_metadata
+    - synonym_list
+    - cas_mapping_information
+    - resolution_confidence_signals
+
+  allowed_when:
+    - identifier_resolution_requested
+    - SMILES_required_for_downstream_tools
+    - preprocessing_or_input_normalization_step
+    - user_input_is_not_structural
+
+  forbidden_when:
+    - SMILES_already_provided_and_validated
+    - molecular_property_prediction_requested
+    - clustering_or_similarity_requested
+    - generative_or_optimization_requested
+
+  constraints:
+    - resolves identifiers, not molecular correctness
+    - may return multiple candidate molecules
+    - does not guarantee biological relevance
+    - relies on external resolution services
+
+  notes:
+    - ideal first step in user-facing workflows
+    - cross-check count can signal ambiguity
+    - downstream validation is recommended

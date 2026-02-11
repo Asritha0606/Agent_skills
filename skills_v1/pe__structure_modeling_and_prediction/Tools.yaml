@@ -1,0 +1,258 @@
+# =========================
+# Tools
+# =========================
+tools:
+Backbone_Generation:
+  category: structure_modeling
+
+  description: >
+    Generates three-dimensional antibody backbone structures for
+    heavy or light chains without assigning amino acid sequences.
+    Produces framework-level structural scaffolds suitable for
+    downstream structure-based design and analysis workflows.
+
+  when_to_use:
+    - structural scaffolds are required before sequence design
+    - antibody backbone templates are needed for CDR grafting
+    - preparing structures for sequence-conditioned design tools
+    - structure-first workflows in antibody engineering
+    - docking or stability analysis requires backbone geometry
+
+  requires:
+    - chain_selection
+
+  optional_inputs:
+    - number_of_backbone_models
+
+  produces:
+    - antibody_backbone_structures
+    - backbone_structure_files
+
+  allowed_when:
+    - antibody_structure_requested
+    - backbone_only_modeling_requested
+    - no_sequence_assignment_required
+
+  forbidden_when:
+    - full_sequence_design_requested
+    - sequence_generation_requested
+    - property_prediction_requested
+    - ligand_binding_optimization_requested
+
+  constraints:
+    - produces backbone-only structures without side-chain identities
+    - does not perform sequence design or mutation
+    - not suitable for direct functional inference
+    - output quality depends on canonical framework assumptions
+
+  notes:
+    - prefer this tool when structural scaffolds are needed early
+    - downstream sequence assignment or refinement is expected
+    - generated backbones should be validated before high-stakes use
+
+
+boltz_structure_prediction:
+  category: structure_prediction
+
+  description: >
+    Predicts three-dimensional molecular structures from biological
+    inputs such as protein sequences, DNA sequences, RNA sequences,
+    or ligand SMILES representations. Produces PDB-format structural
+    models suitable for downstream analysis and modeling.
+
+  when_to_use:
+    - structure prediction is required from sequence-level inputs
+    - no experimental or template structure is available
+    - preparing structures for docking, dynamics, or visualization
+    - high-throughput or multi-entity structure generation is needed
+    - heterogeneous biomolecules must be processed together
+
+  requires:
+    - at_least_one_biological_input
+
+  optional_inputs:
+    - protein_sequences
+    - dna_sequences
+    - rna_sequences
+    - ligand_smiles
+
+  produces:
+    - predicted_structures
+    - affinity_or_model_scores
+    - structure_files_archive
+    - execution_status
+
+  allowed_when:
+    - structure_requested
+    - sequence_or_smiles_provided
+    - no_existing_structure_provided
+
+  forbidden_when:
+    - sequence_generation_requested
+    - structure_refinement_requested
+    - backbone_only_modeling_requested
+    - property_only_analysis_requested
+
+  constraints:
+    - predicted structures are approximate and model-derived
+    - does not refine or optimize existing structures
+    - affinity metadata is model-dependent and not experimentally validated
+    - output accuracy depends on input quality and sequence validity
+
+  notes:
+    - suitable for exploratory and preparatory workflows
+    - downstream refinement or validation is recommended
+    - treat outputs as hypotheses rather than final structures
+
+
+Monomer structure prediction:
+  category: structure_prediction
+
+  description: >
+    Predicts three-dimensional structures for monomeric proteins
+    directly from amino acid sequences. Generates PDB models along
+    with structural confidence metrics to support downstream analysis.
+
+  when_to_use:
+    - monomeric protein structures are required from sequence input
+    - the user provides one or more protein sequences
+    - confidence metrics are needed to assess model reliability
+    - batch structure prediction is desired
+    - preparatory structures are needed for downstream workflows
+
+  requires:
+    - protein_sequences_csv
+
+  optional_inputs: []
+
+  produces:
+    - protein_structures
+    - structure_confidence_metrics
+    - structure_summary_table
+    - structure_files_archive
+
+  allowed_when:
+    - structure_requested
+    - protein_sequence_provided
+    - monomeric_context_assumed
+
+  forbidden_when:
+    - multimeric_or_complex_modeling_requested
+    - backbone_only_modeling_requested
+    - structure_refinement_requested
+    - sequence_generation_requested
+
+  constraints:
+    - predicts monomeric structures only
+    - does not model protein–protein or protein–ligand complexes
+    - output accuracy depends on sequence quality
+    - confidence scores are predictive, not experimental
+
+  notes:
+    - use confidence metrics to guide downstream decisions
+    - low-confidence regions may require refinement or exclusion
+    - predicted structures should not be treated as experimental truth
+
+
+
+
+
+Motif_Scaffolding:
+  category: motif_driven_structure_design
+
+  description: >
+    Generates protein scaffold structures that preserve a user-supplied
+    structural or functional motif. The motif geometry is fixed while
+    surrounding regions are sampled to create novel scaffold designs.
+
+  when_to_use:
+    - a fixed structural or functional motif must be preserved
+    - embedding motifs into new protein scaffolds is required
+    - stabilizing catalytic residues or epitopes is the objective
+    - immunogen, binder, or enzyme scaffold design workflows
+    - local structural constraints must dominate global design freedom
+
+  requires:
+    - motif_structure_pdb
+    - contig_definition
+    - design_targets
+
+  optional_inputs:
+    - minimum_scaffold_length
+    - maximum_scaffold_length
+    - samples_per_target
+
+  produces:
+    - scaffold_structures
+    - structure_files_archive
+
+  allowed_when:
+    - motif_provided
+    - structure_based_design_requested
+    - motif_preservation_required
+
+  forbidden_when:
+    - unconstrained_structure_generation_requested
+    - sequence_only_design_requested
+    - motif_free_scaffold_generation_requested
+
+  constraints:
+    - motif geometry is strictly preserved
+    - scaffold flexibility is limited by contig definitions
+    - does not assign or optimize amino acid sequences
+    - unsuitable when no explicit motif is provided
+
+  notes:
+    - contig definitions strongly influence design outcomes
+    - downstream sequence design or refinement is typically required
+    - validate motif integrity in all generated scaffolds
+
+
+
+fpocket:
+  category: binding_site_prediction
+
+  description: >
+    Detects and analyzes potential ligand-binding pockets in a protein
+    structure. Identifies cavities and computes druggability-related
+    metrics, producing ranked pocket summaries and pocket-specific
+    structural files.
+
+  when_to_use:
+    - a protein structure is available
+    - binding-site discovery or analysis is required
+    - assessing druggability of a target is the objective
+    - preparing structures for docking or virtual screening
+    - prioritizing regions of interest on a protein surface
+
+  requires:
+    - protein_structure_pdb
+
+  optional_inputs: []
+
+  produces:
+    - pocket_structures
+    - pocket_ranking_table
+    - druggability_scores
+    - pocket_geometric_metrics
+
+  allowed_when:
+    - structure_provided
+    - binding_site_analysis_requested
+
+  forbidden_when:
+    - no_structure_provided
+    - sequence_only_input_provided
+    - structure_generation_requested
+    - property_only_analysis_requested
+
+  constraints:
+    - operates only on existing protein structures
+    - does not predict ligand binding affinity
+    - pocket identification is geometry-based
+    - druggability scores are heuristic, not definitive
+
+  notes:
+    - use predicted or experimental structures as input
+    - downstream docking or dynamics is recommended for validation
+    - multiple pockets may be identified; ranking should guide selection

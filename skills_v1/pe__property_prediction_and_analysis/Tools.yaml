@@ -1,0 +1,353 @@
+# =========================
+# Tools
+# =========================
+tools:
+peptide_property_prediction:
+  category: peptide_property_analysis
+
+  description: >
+    Predicts immunological and safety-related properties of peptide
+    sequences, such as antigenicity, allergenicity, and toxicity.
+    Designed to support screening and prioritization of peptide
+    candidates in immunological and vaccine-related workflows.
+
+  when_to_use:
+    - peptide sequences require immunological or safety evaluation
+    - antigenicity, allergenicity, or toxicity assessment is requested
+    - peptide candidates must be filtered or ranked before downstream use
+    - vaccine design or epitope screening workflows are being performed
+    - sequence generation or modeling has already been completed
+
+  requires:
+    - peptide_sequences_csv
+    - property_selection
+
+  optional_inputs:
+    - antigenicity_reference
+    - allergenicity_reference
+    - toxicity_reference
+
+  produces:
+    - predicted_peptide_properties
+    - property_score_table
+    - execution_status
+
+  allowed_when:
+    - peptide_sequences_provided
+    - property_prediction_requested
+    - immunological_or_safety_analysis_requested
+
+  forbidden_when:
+    - sequence_generation_requested
+    - structure_modeling_requested
+    - docking_or_dynamics_requested
+    - non_peptide_input_provided
+
+  constraints:
+    - predictions are model-derived and not experimentally validated
+    - property scores are context-dependent and threshold-sensitive
+    - does not modify or optimize peptide sequences
+    - limited to supported immunological and safety properties
+
+  notes:
+    - use reference values to contextualize prediction scores
+    - downstream experimental validation is recommended
+    - combine with other analyses for robust candidate selection
+
+
+Antibody_Property_Prediction:
+  category: antibody_property_analysis
+
+  description: >
+    Predicts functional and biophysical properties of antibody
+    sequences, including stability, solubility, binding-related
+    characteristics, and CDR region identification, using
+    deep-learning-based models.
+
+  when_to_use:
+    - antibody sequences require developability or functional assessment
+    - thermal stability or solubility prediction is requested
+    - antigen–antibody interaction potential is being evaluated
+    - CDR regions need to be identified or annotated
+    - rapid, sequence-based antibody screening is required
+
+  requires:
+    - antibody_sequences_csv
+    - numbering_scheme
+    - property_selection
+
+  optional_inputs: []
+
+  produces:
+    - predicted_antibody_properties
+    - cdr_annotations
+    - property_report_table
+
+  allowed_when:
+    - antibody_sequences_provided
+    - property_prediction_requested
+    - antibody_centric_workflow
+
+  forbidden_when:
+    - sequence_generation_requested
+    - structure_modeling_requested
+    - docking_or_dynamics_requested
+    - non_antibody_input_provided
+
+  constraints:
+    - predictions are sequence-based and model-derived
+    - does not perform structural modeling or refinement
+    - property scores are approximations, not experimental values
+    - limited to supported antibody-specific properties
+
+  notes:
+    - numbering scheme selection affects CDR interpretation
+    - combine multiple property predictions for robust assessment
+    - downstream experimental validation is recommended
+
+
+
+NetsolP:
+  category: protein_property_prediction
+
+  description: >
+    Predicts protein solubility and expression usability using
+    transformer-based protein language models. Designed to support
+    developability assessment and experimental feasibility analysis.
+
+  when_to_use:
+    - protein solubility assessment is required
+    - expression usability in E. coli is a concern
+    - filtering or ranking protein candidates by developability
+    - early-stage risk assessment before experimental validation
+    - comparing multiple protein sequences for expression feasibility
+
+  requires:
+    - protein_sequences_file
+
+  optional_inputs:
+    - prediction_type
+
+  produces:
+    - solubility_scores
+    - usability_scores
+    - biochemical_property_table
+
+  allowed_when:
+    - protein_sequences_provided
+    - property_prediction_requested
+    - developability_or_expression_analysis_requested
+
+  forbidden_when:
+    - sequence_generation_requested
+    - structure_modeling_requested
+    - docking_or_dynamics_requested
+    - peptide_only_analysis_requested
+
+  constraints:
+    - predictions are model-derived and organism-context dependent
+    - solubility refers primarily to E. coli expression systems
+    - does not modify or optimize sequences
+    - scores should not be treated as experimental guarantees
+
+  notes:
+    - use multiple prediction types (S, U, US) for robust assessment
+    - combine with other property analyses for confident decisions
+    - downstream experimental validation is recommended
+
+
+
+Pep_Patch:
+  category: protein_surface_analysis
+
+  description: >
+    Analyzes electrostatic surface patches on protein structures to
+    identify charged regions relevant for molecular interactions,
+    epitope mapping, and binding interface analysis.
+
+  when_to_use:
+    - a protein structure is available
+    - surface electrostatics are relevant to the task
+    - epitope mapping or antibody binding analysis is requested
+    - protein–protein interaction interfaces are being investigated
+    - localized surface features need to be compared or prioritized
+
+  requires:
+    - protein_structure_pdb
+
+  optional_inputs: []
+
+  produces:
+    - electrostatic_patch_table
+    - patch_charge_classification
+    - surface_region_metrics
+
+  allowed_when:
+    - structure_provided
+    - surface_property_analysis_requested
+
+  forbidden_when:
+    - sequence_only_input_provided
+    - structure_generation_requested
+    - global_property_prediction_requested
+    - docking_or_dynamics_requested
+
+  constraints:
+    - operates only on existing protein structures
+    - analyzes electrostatic properties at the surface level
+    - does not predict binding affinity or kinetics
+    - patch definitions are geometry- and charge-dependent
+
+  notes:
+    - combine with docking or binding-site analysis for stronger inference
+    - patch relevance depends on structural accuracy
+    - multiple patches may be identified and should be interpreted comparatively
+
+
+Cat_Pred:
+  category: enzyme_kinetics_prediction
+
+  description: >
+    Predicts catalytic rate constants (kcat) for enzyme–substrate
+    pairs using deep-learning models that combine protein sequence
+    and substrate SMILES representations. Provides uncertainty
+    estimates alongside predictions.
+
+  when_to_use:
+    - enzyme catalytic efficiency needs to be estimated
+    - enzyme–substrate compatibility is being evaluated
+    - ranking or prioritizing enzyme variants by kcat
+    - functional assessment of biocatalysts is required
+    - uncertainty-aware decision-making is desired
+
+  requires:
+    - enzyme_sequences_and_substrates_csv
+
+  optional_inputs: []
+
+  produces:
+    - predicted_kcat_values
+    - log_scaled_predictions
+    - uncertainty_metrics
+    - kinetic_summary_table
+
+  allowed_when:
+    - enzyme_sequence_provided
+    - substrate_smiles_provided
+    - functional_property_prediction_requested
+
+  forbidden_when:
+    - sequence_generation_requested
+    - structure_modeling_requested
+    - docking_or_dynamics_requested
+    - non_enzyme_input_provided
+
+  constraints:
+    - predictions are model-derived approximations
+    - kinetic values are context-dependent and substrate-specific
+    - does not simulate reaction mechanisms
+    - uncertainty reflects model confidence, not experimental error
+
+  notes:
+    - use uncertainty metrics to guide experimental prioritization
+    - compare predictions across variants rather than relying on absolutes
+    - downstream experimental validation is recommended
+
+
+Clean:
+  category: sequence_preprocessing
+
+  description: >
+    Sanitizes, validates, and standardizes raw protein sequences.
+    Removes invalid characters, normalizes formatting, and optionally
+    annotates enzyme-related metadata to prepare sequences for
+    downstream analysis.
+
+  when_to_use:
+    - raw or user-provided protein sequences require validation
+    - input formatting is inconsistent or uncertain
+    - preparing datasets for property prediction or functional analysis
+    - enzyme datasets require EC number annotation
+    - sequence quality must be ensured before further processing
+
+  requires:
+    - protein_sequences_csv
+
+  optional_inputs: []
+
+  produces:
+    - cleaned_sequences
+    - sequence_validation_metadata
+    - predicted_ec_annotations
+    - smiles_representations
+
+  allowed_when:
+    - protein_sequences_provided
+    - preprocessing_or_validation_requested
+    - upstream_data_quality_uncertain
+
+  forbidden_when:
+    - sequence_generation_requested
+    - structure_modeling_requested
+    - direct_property_prediction_requested_without_preprocessing
+
+  constraints:
+    - does not modify biological meaning beyond sanitization
+    - EC predictions are model-derived annotations
+    - SMILES generation applies only when enzymatic context is inferred
+    - not a substitute for experimental sequence validation
+
+  notes:
+    - recommended as an initial step in multi-tool pipelines
+    - improves reliability of downstream property predictions
+    - review cleaned outputs when original data quality is critical
+
+
+
+Prodigy:
+  category: binding_affinity_prediction
+
+  description: >
+    Predicts protein–protein binding affinities from three-dimensional
+    structural data by analyzing intermolecular contacts and interface
+    properties. Produces quantitative affinity estimates for interacting
+    chain pairs.
+
+  when_to_use:
+    - protein–protein binding affinity needs to be estimated
+    - structural data for a protein complex is available
+    - comparing interaction strength across chain pairs
+    - evaluating binder or complex stability
+    - prioritizing interfaces for downstream analysis
+
+  requires:
+    - protein_complex_structure
+
+  optional_inputs:
+    - chain_selection
+
+  produces:
+    - predicted_binding_affinities
+    - interaction_pair_mapping
+    - affinity_summary_table
+
+  allowed_when:
+    - structure_provided
+    - protein_protein_interaction_analysis_requested
+
+  forbidden_when:
+    - sequence_only_input_provided
+    - structure_generation_requested
+    - docking_or_dynamics_requested
+    - ligand_only_interaction_requested
+
+  constraints:
+    - operates only on existing protein complex structures
+    - affinity values are model-derived approximations
+    - does not simulate binding kinetics or dynamics
+    - accuracy depends on structural quality and interface definition
+
+  notes:
+    - use chain selection to focus analysis on relevant interfaces
+    - compare affinities relatively rather than relying on absolutes
+    - downstream experimental validation is recommended
